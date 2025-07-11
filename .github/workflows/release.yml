@@ -22,22 +22,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
 
-      - name: Extract version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-
       - name: Build binary
         run: pyinstaller --onefile src/main.py --name iiidmformatter
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ env.VERSION }}
           files: dist/iiidmformatter
-
-      - name: Upload Release Asset
-        uses: actions/upload-artifact@v4
-        with:
-          name: iiidmformatter
-          path: dist/iiidmformatter
+          name: Release ${{ github.ref_name }}
+          body: |
+            See the [changelog](https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}) for details.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
