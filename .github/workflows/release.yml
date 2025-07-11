@@ -26,18 +26,6 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
-      - name: Update version in pyproject.toml
-        run: |
-          sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
-
-      - name: Commit version bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml
-          git commit -m "Bump version to ${VERSION} [skip ci]" || echo "No changes to commit"
-          git push
-
       - name: Build binary
         run: pyinstaller --onefile src/main.py --name iiidmformatter
 
