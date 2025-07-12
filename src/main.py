@@ -1,10 +1,11 @@
 """Formatter for 3DM ini files."""
 
+import sys
 import argparse
 from pathlib import Path
 
 
-def format_file(file_path: Path):
+def format_file(lines: list[str]) -> str:
     def format_line(line):
         stripped = line.strip()
         if stripped.startswith(";"):
@@ -32,9 +33,6 @@ def format_file(file_path: Path):
             else:
                 formatted.append("    " * indent + formatted_line)
         return formatted
-
-    with open(file_path, "r", encoding="utf-8") as file:
-        lines = file.readlines()
 
     sections = []
     current_section = []
@@ -65,13 +63,9 @@ def format_file(file_path: Path):
 
 def main():
     """Main function to parse command line arguments and format the ini file."""
-    parser = argparse.ArgumentParser(
-        description="Formatter for 3DM ini files. Usage: iiidmformatter <filename>"
-    )
+    parser = argparse.ArgumentParser(description="Formatter for 3DM ini files")
     parser.add_argument(
-        "filename",
-        type=Path,
-        help="Path to the input 3DM ini file to be formatted.",
+        "--filename", type=Path, help="Path to the input 3DM ini file to be formatted."
     )
     parser.add_argument(
         "--output",
@@ -81,11 +75,14 @@ def main():
 
     args = parser.parse_args()
 
-    if not args.filename.exists():
-        print(f"Input file {args.input_file} does not exist.")
-        exit(1)
+    if args.filename is None:
+        lines = sys.stdin.readlines()
+    else:
+        with open(args.filename, "r", encoding="utf-8") as file:
+            lines = file.readlines()
 
-    formatted_content = format_file(args.filename)
+    formatted_content = format_file(lines)
+
     if args.output:
         with open(args.output, "w", encoding="utf-8") as output_file:
             output_file.write(formatted_content)
