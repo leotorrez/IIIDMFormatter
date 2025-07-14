@@ -13,3 +13,5 @@ main.dist
 main.cmd
 tests
 uv.lock
+iiidmformatter.exe
+uv.lock

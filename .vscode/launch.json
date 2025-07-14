@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug via filename main.ini",
+      "type": "debugpy",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/",
+      "program": "src/main.py",
+      "args": ["--filename", "${workspaceFolder}/tests/main.ini"],
+      "console": "integratedTerminal"
+    }
+  ]
+}
