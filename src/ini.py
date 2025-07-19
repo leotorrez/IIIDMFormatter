@@ -34,13 +34,67 @@ class INI_Line:
 
     def format_line(self) -> None:
         """Format the line by stripping and lowercasing the key and value"""
-        if self.is_value_pair:
-            self.key = f"{self.key.strip()} "
-            self.value = f" {self.value.strip()}\n"
-        else:
-            self.key = self.key.strip() + "\n"
+        if self.key.startswith(";"):
+            return  # Don't format commented lines
 
-        # TODO: add special treatment for logical operators
+        if self.is_value_pair:
+            self.key = f"{self.clear_text(self.key)} "
+            self.value = f" {self.clear_text(self.value, self.key.startswith("condition"))}\n"
+        else:
+            self.key = self.key.strip()
+            should_clean = self.key.startswith("if") or self.key.startswith("else if") or self.key.startswith("elif")
+            self.key = self.clear_text(self.key, should_clean) + "\n"
+
+    def clear_text(self, input: str, clean_operators=False) -> str:
+        """Ensures the logical operators have a space before and after them as well as no space in the middle of it"""
+        input = input.strip()
+        while "  " in input:
+            input = input.replace("  ", " ")
+
+        if not clean_operators:
+            return input
+
+        arimetic_operators = list("+*-/<%>")
+        arimetic_operators_wide_2 = [
+            "//",
+            "==",
+            "!=",
+            "<=",
+            ">=",
+        ]
+        arimetic_operators_wide_3 = [
+            "===",
+            "!==",
+        ]
+        logical_operators = ["&&", "||"]
+        operators = (
+            arimetic_operators
+            + arimetic_operators_wide_2
+            + arimetic_operators_wide_3
+            + logical_operators
+        )
+        last_char: str = ""
+        output: str = ""
+        for char in input:
+            if (last_char in operators and char != " ") or (
+                last_char != " " and char in operators
+            ):
+                output += " " + char
+                last_char = char
+                continue
+
+            output += char
+            last_char = char
+
+        for op in arimetic_operators_wide_2 + logical_operators:
+            output = output.replace(op[0] + " " + op[1], op)
+
+        for op in arimetic_operators_wide_3:
+            output = output.replace(op[0] + " " + op[1] + " " + op[2], op)
+            output = output.replace(op[0] + op[1] + " " + op[2], op)
+            output = output.replace(op[0] + " " + op[1] + op[2], op)
+
+        return output.strip()
 
 
 @dataclass
@@ -72,7 +126,13 @@ class Section:
 
     def add_single_line(self, line: str) -> None:
         key_value: list[str] = line.split("=")
-        if len(key_value) == 2:
+        line_stripped = line.strip()
+        if len(key_value) == 2 and not (
+            line_stripped.startswith(";")
+            or line_stripped.startswith("if")
+            or line_stripped.startswith("else if")
+            or line_stripped.startswith("elif")
+        ):
             key: str = key_value[0]
             value: str = key_value[1]
             self.lines.append(INI_Line(key=key, value=value, is_value_pair=True))
