@@ -39,10 +39,16 @@ class INI_Line:
 
         if self.is_value_pair:
             self.key = f"{self.clear_text(self.key)} "
-            self.value = f" {self.clear_text(self.value, self.key.startswith("condition"))}\n"
+            self.value = (
+                f" {self.clear_text(self.value, self.key.startswith('condition'))}\n"
+            )
         else:
             self.key = self.key.strip()
-            should_clean = self.key.startswith("if") or self.key.startswith("else if") or self.key.startswith("elif")
+            should_clean = (
+                self.key.startswith("if")
+                or self.key.startswith("else if")
+                or self.key.startswith("elif")
+            )
             self.key = self.clear_text(self.key, should_clean) + "\n"
 
     def clear_text(self, input: str, clean_operators=False) -> str:
@@ -54,47 +60,58 @@ class INI_Line:
         if not clean_operators:
             return input
 
-        arimetic_operators = list("+*-/<%>")
-        arimetic_operators_wide_2 = [
-            "//",
-            "==",
-            "!=",
-            "<=",
-            ">=",
-        ]
-        arimetic_operators_wide_3 = [
-            "===",
-            "!==",
-        ]
+        arimetic_operators = list("+=*-/<%>!")
+        arimetic_operators_wide_2 = ["//", "==", "!=", "<=", ">="]
+        arimetic_operators_wide_3 = ["===", "!=="]
         logical_operators = ["&&", "||"]
-        operators = (
-            arimetic_operators
-            + arimetic_operators_wide_2
-            + arimetic_operators_wide_3
-            + logical_operators
-        )
-        last_char: str = ""
-        output: str = ""
-        for char in input:
-            if (last_char in operators and char != " ") or (
-                last_char != " " and char in operators
-            ):
-                output += " " + char
-                last_char = char
-                continue
-
-            output += char
-            last_char = char
 
         for op in arimetic_operators_wide_2 + logical_operators:
-            output = output.replace(op[0] + " " + op[1], op)
+            input = input.replace(op[0] + " " + op[1], op)
 
         for op in arimetic_operators_wide_3:
-            output = output.replace(op[0] + " " + op[1] + " " + op[2], op)
-            output = output.replace(op[0] + op[1] + " " + op[2], op)
-            output = output.replace(op[0] + " " + op[1] + op[2], op)
+            input = input.replace(op[0] + " " + op[1] + " " + op[2], op)
+            input = input.replace(op[0] + op[1] + " " + op[2], op)
+            input = input.replace(op[0] + " " + op[1] + op[2], op)
 
-        return output.strip()
+        operators_width = [
+            [],
+            arimetic_operators,
+            arimetic_operators_wide_2 + logical_operators,
+            arimetic_operators_wide_3,
+        ]
+        # Adds space before operator
+        for w in range(1, 4):
+            print(input)
+            for i in range(len(input)):
+                if i > len(input) - w:
+                    continue
+                prev_char = input[i - 1] if i > 0 else ""
+                substring = input[i : i + w]
+
+                if (
+                    substring in operators_width[w]
+                    and prev_char != " "
+                    and prev_char not in arimetic_operators
+                ):
+                    input = input[:i] + " " + input[i:]
+                    i += 1
+        # Adds space after operator
+        for w in range(1, 4):
+            for i in range(len(input)):
+                if i > len(input) - w:
+                    continue
+                next_char = input[i + w] if i + w < len(input) else ""
+                substring = input[i : i + w]
+
+                if (
+                    substring in operators_width[w]
+                    and next_char != " "
+                    and next_char not in arimetic_operators
+                ):
+                    input = input[: i + w] + " " + input[i + w :]
+                    i += 1
+
+        return input.strip()
 
 
 @dataclass
