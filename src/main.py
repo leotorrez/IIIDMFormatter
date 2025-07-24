@@ -23,7 +23,10 @@ def main():
         default="utf-8",
         help="Encoding to use for reading and writing files.",
     )
-    # TODO: add arguments for indentation style, line endings, etc.
+    # TODO: add arguments for:
+    # - indentation style
+    # - flag to not format titles
+    # - flag to not format operators
 
     args = parser.parse_args()
 

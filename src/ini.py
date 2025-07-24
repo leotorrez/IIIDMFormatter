@@ -38,42 +38,43 @@ class INI_Line:
             return  # Don't format commented lines
 
         if self.is_value_pair:
-            self.key = f"{self.clear_text(self.key)} "
-            self.value = (
-                f" {self.clear_text(self.value, self.key.startswith('condition'))}\n"
-            )
-        else:
-            self.key = self.key.strip()
-            should_clean = (
-                self.key.startswith("if")
-                or self.key.startswith("else if")
-                or self.key.startswith("elif")
-            )
-            self.key = self.clear_text(self.key, should_clean) + "\n"
+            # TODO: add logic to detect variable assignment
+            should_clean: bool = self.key.startswith("condition")
+            self.key = f"{self.clean_text(self.key)} "
+            self.value = f" {self.clean_text(self.value, should_clean)}\n"
+            return
 
-    def clear_text(self, input: str, clean_operators=False) -> str:
+        self.key = self.key.strip()
+        should_clean: bool = (
+            self.key.startswith("if")
+            or self.key.startswith("else if")
+            or self.key.startswith("elif")
+        )
+        self.key = self.clean_text(self.key, should_clean) + "\n"
+
+    def clean_text(self, input: str, clean_operators=False) -> str:
         """Ensures the logical operators have a space before and after them as well as no space in the middle of it"""
-        input = input.strip()
-        while "  " in input:
-            input = input.replace("  ", " ")
+        input_str: str = input.strip()
+        while "  " in input_str:
+            input_str = input_str.replace("  ", " ")
 
         if not clean_operators:
-            return input
+            return input_str
 
-        arimetic_operators = list("+=*-/<%>!")
-        arimetic_operators_wide_2 = ["//", "==", "!=", "<=", ">="]
-        arimetic_operators_wide_3 = ["===", "!=="]
-        logical_operators = ["&&", "||"]
+        arimetic_operators: list[str] = list("+=*-/<%>!")
+        arimetic_operators_wide_2: list[str] = ["//", "==", "!=", "<=", ">="]
+        arimetic_operators_wide_3: list[str] = ["===", "!=="]
+        logical_operators: list[str] = ["&&", "||"]
 
         for op in arimetic_operators_wide_2 + logical_operators:
-            input = input.replace(op[0] + " " + op[1], op)
+            input_str = input_str.replace(op[0] + " " + op[1], op)
 
         for op in arimetic_operators_wide_3:
-            input = input.replace(op[0] + " " + op[1] + " " + op[2], op)
-            input = input.replace(op[0] + op[1] + " " + op[2], op)
-            input = input.replace(op[0] + " " + op[1] + op[2], op)
+            input_str = input_str.replace(op[0] + " " + op[1] + " " + op[2], op)
+            input_str = input_str.replace(op[0] + op[1] + " " + op[2], op)
+            input_str = input_str.replace(op[0] + " " + op[1] + op[2], op)
 
-        operators_width = [
+        operators_width: list[list[str]] = [
             [],
             arimetic_operators,
             arimetic_operators_wide_2 + logical_operators,
@@ -81,36 +82,36 @@ class INI_Line:
         ]
         # Adds space before operator
         for w in range(1, 4):
-            for i in range(len(input)):
-                if i > len(input) - w:
+            for i in range(len(input_str)):
+                if i > len(input_str) - w:
                     continue
-                prev_char = input[i - 1] if i > 0 else ""
-                substring = input[i : i + w]
+                prev_char: str = input_str[i - 1] if i > 0 else ""
+                substring: str = input_str[i : i + w]
 
                 if (
                     substring in operators_width[w]
                     and prev_char != " "
                     and prev_char not in arimetic_operators
                 ):
-                    input = input[:i] + " " + input[i:]
+                    input_str = input_str[:i] + " " + input_str[i:]
                     i += 1
         # Adds space after operator
         for w in range(1, 4):
-            for i in range(len(input)):
-                if i > len(input) - w:
+            for i in range(len(input_str)):
+                if i > len(input_str) - w:
                     continue
-                next_char = input[i + w] if i + w < len(input) else ""
-                substring = input[i : i + w]
+                next_char: str = input_str[i + w] if i + w < len(input_str) else ""
+                substring: str = input_str[i : i + w]
 
                 if (
                     substring in operators_width[w]
                     and next_char != " "
                     and next_char not in arimetic_operators
                 ):
-                    input = input[: i + w] + " " + input[i + w :]
+                    input_str = input_str[: i + w] + " " + input_str[i + w :]
                     i += 1
 
-        return input.strip()
+        return input_str.strip()
 
 
 @dataclass
@@ -142,7 +143,7 @@ class Section:
 
     def add_single_line(self, line: str) -> None:
         key_value: list[str] = line.split("=")
-        line_stripped = line.strip()
+        line_stripped: str = line.strip()
         if len(key_value) == 2 and not (
             line_stripped.startswith(";")
             or line_stripped.startswith("if")
@@ -169,8 +170,7 @@ class Section:
         self.add_single_line("\n\n")
 
     def format_header_name(self) -> None:
-        self.name = f"{self.name.strip()}\n"
-        # TODO: clean up within [] So there is no space before or after the []
+        self.name = f"[{self.name.strip()[1:-1].strip()}]\n"
 
 
 class INI_file:
