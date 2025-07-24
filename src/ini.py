@@ -81,7 +81,6 @@ class INI_Line:
         ]
         # Adds space before operator
         for w in range(1, 4):
-            print(input)
             for i in range(len(input)):
                 if i > len(input) - w:
                     continue

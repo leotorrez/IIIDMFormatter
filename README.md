@@ -5,12 +5,10 @@ Formatter for 3DM ini files(should work fine for traditional inis too)
 ## How to build
 
 ```bash
-nuitka --onefile --output-filename=iiidmformatter.exe ./src/main.py
+nuitka --standalone --output-filename=iiidmformatter ./src/main.py
 ```
 
 ## How to test
-
-e e
 
 ```bash
 uv run src/main.py yourtestfile.ini
